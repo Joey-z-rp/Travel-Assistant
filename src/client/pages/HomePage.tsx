@@ -25,19 +25,23 @@ class HomePage extends React.Component {
     async componentDidMount() {
         const worldMap = await d3.json('public/world.json');
 
+        const getCenterPoint = (face, geometry) => {
+            return {
+                x: (geometry.vertices[face.a].x + geometry.vertices[face.b].x + geometry.vertices[face.c].x) / 3,
+                y: (geometry.vertices[face.a].y + geometry.vertices[face.b].y + geometry.vertices[face.c].y) / 3,
+                z: (geometry.vertices[face.a].z + geometry.vertices[face.b].z + geometry.vertices[face.c].z) / 3,
+            };
+        };
+
         console.log({ worldMap });
 
         const countries = topojsonFeature(worldMap, worldMap.objects.countries);
 
         console.log({ countries });
 
-        const store = {};
-
-        for (let i = 0; i < countries.features.length; i++) {
-            store[countries.features[i].id] = countries.features[i];
-        }
-
-        console.log({ store });
+        // for (let i = 0; i < countries.features.length; i++) {
+        //     store[countries.features[i].id] = countries.features[i];
+        // }
 
         const segments = 150;
 
@@ -76,18 +80,6 @@ class HomePage extends React.Component {
         const blueMaterial = new THREE.MeshPhongMaterial({ color: '#2B3B59', transparent: true });
         const baseGlobe = new THREE.Mesh(sphere, blueMaterial);
 
-        // add base map layer with all countries
-        const worldTexture = mapTexture(countries);
-        const mapMaterial  = new THREE.MeshPhongMaterial({ map: worldTexture, transparent: true });
-        const baseMap = new THREE.Mesh(new THREE.SphereGeometry(201, segments, segments), mapMaterial);
-        baseMap.rotation.y = Math.PI * 1.5;
-
-        this.earth = new THREE.Object3D();
-        this.earth.scale.set(2.5, 2.5, 2.5);
-        this.earth.add(baseGlobe);
-        this.earth.add(baseMap);
-        this.scene.add(this.earth);
-
 
         const pointInPolygon = (poly, point) => {
 
@@ -116,21 +108,13 @@ class HomePage extends React.Component {
             return inside;
         };
 
-        const onMouseMove = (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, this.camera);
-            const intersects = raycaster.intersectObject(baseGlobe);
-            if (intersects.length === 0) return;
-            const pointOfIntersection = intersects[0].point;
-            console.log({pointOfIntersection});
-            baseGlobe.worldToLocal(localPoint.copy(pointOfIntersection));
-            console.log({localPoint});
+        const store = sphere.faces.reduce((acc, face) => {
+            const centerPoint = getCenterPoint(face, sphere);
+            const localPoint = new THREE.Vector3(centerPoint.x, centerPoint.y, centerPoint.z);
 
             spherical.setFromVector3(localPoint);
             const lat = THREE.Math.radToDeg(Math.PI / 2 - spherical.phi);
             const lon = THREE.Math.radToDeg(spherical.theta);
-            console.log({lat, lon})
 
             let match = false;
 
@@ -165,7 +149,84 @@ class HomePage extends React.Component {
                 }
             }
 
-            console.log({ result });
+
+            acc[`${face.a}${face.b}${face.c}`] = result && result.code;
+            return acc;
+        }, {});
+
+        console.log({ store })
+
+        // add base map layer with all countries
+        const worldTexture = mapTexture(countries);
+        const mapMaterial  = new THREE.MeshPhongMaterial({ map: worldTexture, transparent: true });
+        const baseMap = new THREE.Mesh(new THREE.SphereGeometry(201, segments, segments), mapMaterial);
+        baseMap.rotation.y = Math.PI * 1.5;
+
+        this.earth = new THREE.Object3D();
+        this.earth.scale.set(2.5, 2.5, 2.5);
+        this.earth.add(baseGlobe);
+        this.earth.add(baseMap);
+        this.scene.add(this.earth);
+
+
+        
+
+        const onMouseMove = (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, this.camera);
+            const intersects = raycaster.intersectObject(baseGlobe);
+            if (intersects.length === 0) return;
+            const pointOfIntersection = intersects[0].point;
+            console.log({pointOfIntersection});
+            const face = intersects[0].face;
+            console.log({before: Date.now()})
+            const country = store[`${face.a}${face.b}${face.c}`];
+            console.log({after: Date.now()})
+            console.log({ country })
+        
+            // baseGlobe.worldToLocal(localPoint.copy(pointOfIntersection));
+            // console.log({localPoint});
+
+            // spherical.setFromVector3(localPoint);
+            // const lat = THREE.Math.radToDeg(Math.PI / 2 - spherical.phi);
+            // const lon = THREE.Math.radToDeg(spherical.theta);
+            // console.log({lat, lon})
+
+            // let match = false;
+
+            // let country;
+            // let coords;
+
+            // let result;
+
+            // for (let i = 0; i < countries.features.length; i++) {
+            //     country = countries.features[i];
+            //     if (country.geometry.type === 'Polygon') {
+            //         match = pointInPolygon(country.geometry.coordinates[0], [lon, lat]);
+            //         if (match) {
+            //             result = {
+            //                 code: countries.features[i].id,
+            //                 name: countries.features[i].properties.name,
+            //             };
+            //             break;
+            //         }
+            //     } else if (country.geometry.type === 'MultiPolygon') {
+            //         coords = country.geometry.coordinates;
+            //         for (let j = 0; j < coords.length; j++) {
+            //             match = pointInPolygon(coords[j][0], [lon, lat]);
+            //             if (match) {
+            //                 result = {
+            //                     code: countries.features[i].id,
+            //                     name: countries.features[i].properties.name,
+            //                 };
+            //                 break;
+            //             }
+            //         }
+            //     }
+            // }
+
+            // console.log({ result });
         };
 
         this.mount.addEventListener('mousemove', onMouseMove);
