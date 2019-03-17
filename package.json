@@ -5,6 +5,7 @@
   "dependencies": {
     "compression": "^1.7.3",
     "cross-fetch": "^2.2.3",
+    "d3": "^5.9.2",
     "express": "^4.16.4",
     "moment": "^2.22.2",
     "react": "^16.6.3",
@@ -18,7 +19,9 @@
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0",
     "semantic-ui-react": "^0.83.0",
-    "three": "^0.102.1"
+    "three": "^0.102.1",
+    "three-orbitcontrols": "^2.102.1",
+    "topojson": "^3.0.2"
   },
   "scripts": {
     "start": "webpack --config ./webpackConfig/development.js --watch",
