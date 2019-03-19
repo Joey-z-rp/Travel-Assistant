@@ -24,6 +24,9 @@ export class Globe {
     private renderer;
     private light;
     private mapLayer;
+    private selectedCountryOverlay;
+    private lastCountry;
+    private rotationAngle = 0.001;
 
     constructor(mountingElement: HTMLElement) {
         this.mountingElement = mountingElement;
@@ -46,6 +49,8 @@ export class Globe {
         const countriesGeoJson = await this.getCountriesGeoJson();
 
         this.createMapLayer(countriesGeoJson);
+
+        this.createSelectedHighlightLayer();
 
         this.createEarth();
 
@@ -104,11 +109,20 @@ export class Globe {
         this.mapLayer.rotation.y = Math.PI * 1.5;
     }
 
+    private createSelectedHighlightLayer() {
+        this.selectedCountryOverlay = new THREE.Mesh(
+            new THREE.SphereGeometry(this.RADIUS + 2, 40, 40),
+            new THREE.MeshPhongMaterial({ opacity: 0, transparent: true }),
+        );
+        this.selectedCountryOverlay.rotation.y = Math.PI * 1.5;
+    }
+
     private createEarth() {
         this.earth = new THREE.Object3D();
         this.earth.scale.set(2.5, 2.5, 2.5);
         this.earth.add(this.baseGlobe);
         this.earth.add(this.mapLayer);
+        this.earth.add(this.selectedCountryOverlay);
         this.scene.add(this.earth);
         this.scene.add(this.light);
     }
@@ -124,11 +138,17 @@ export class Globe {
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, this.camera);
             const intersects = raycaster.intersectObject(this.baseGlobe);
-            if (intersects.length !== 0) {
-                const face = intersects[0].face!;
-                const country = facesToCountriesMapping[`${face.a}${face.b}${face.c}`];
-                console.log({ country });
-            }
+
+            if (intersects.length === 0) return;
+
+            const face = intersects[0].face!;
+            const currentCountry = facesToCountriesMapping[`${face.a}${face.b}${face.c}`];
+
+            console.log({ currentCountry });
+
+            this.highlightSelectedCountry(currentCountry);
+
+            this.lastCountry = currentCountry;
         };
     }
 
@@ -160,7 +180,7 @@ export class Globe {
                     return false;
                 });
 
-                accumulator[`${face.a}${face.b}${face.c}`] = result && result.id;
+                accumulator[`${face.a}${face.b}${face.c}`] = result;
 
                 return accumulator;
             },
@@ -170,6 +190,29 @@ export class Globe {
         return store;
     }
 
+    private highlightSelectedCountry(country) {
+        if (this.shouldUpdateSelectedCountry(country)) {
+            const isAnyCountrySelected = !!(country && country.id);
+
+            this.rotationAngle = isAnyCountrySelected ? 0 : 0.001;
+
+            const material = isAnyCountrySelected
+                ? new THREE.MeshPhongMaterial({
+                    map: mapTexture(country, this.mountingElement, 'red'),
+                    transparent: true,
+                })
+                : new THREE.MeshPhongMaterial({ opacity: 0, transparent: true });
+
+            this.selectedCountryOverlay.material = material;
+        }
+    }
+
+    private shouldUpdateSelectedCountry(country) {
+        return (this.lastCountry && !country) ||
+            (!this.lastCountry && country) ||
+            (this.lastCountry && country && this.lastCountry.id !== country.id);
+    }
+
     start() {
         if (!this.frameId) {
             this.frameId = requestAnimationFrame(this.animate);
@@ -177,7 +220,7 @@ export class Globe {
     }
 
     private animate = () => {
-        this.earth.rotation.y += 0.001;
+        this.earth.rotation.y += this.rotationAngle;
         this.renderer.render(this.scene, this.camera);
         this.frameId = window.requestAnimationFrame(this.animate);
     }
