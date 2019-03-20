@@ -1,11 +1,8 @@
-import * as compression from 'compression';
 import * as express from 'express';
 import * as path from 'path';
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-app.use(compression());
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
