@@ -1,93 +1,36 @@
 import * as d3 from 'd3';
 import * as THREE from 'three';
-import * as OrbitControls from 'three-orbitcontrols';
 import { feature as topojsonFeature } from 'topojson';
 
+import { BaseGlobe } from './baseGlobe';
 import {
     getCenterPoint,
     mapTexture,
     pointInPolygon,
 } from './globeHelpers';
 
-export class Globe {
-    private SEGMENT = 150;
-    private RADIUS = 200;
-    private frameId;
-    private mountingElement;
-    private width;
-    private height;
-    private baseGlobe;
-    private baseGlobeGeometry;
-    private earth;
-    private scene;
-    private camera;
-    private renderer;
-    private light;
+export class Globe extends BaseGlobe {
     private mapLayer;
     private selectedCountryOverlay;
     private lastCountry;
-    private rotationAngle = 0.001;
 
     constructor(mountingElement: HTMLElement) {
-        this.mountingElement = mountingElement;
+        super(mountingElement);
     }
 
     async init() {
-        this.width = this.mountingElement.clientWidth;
-        this.height = this.mountingElement.clientHeight;
-
-        this.scene = new THREE.Scene();
-
-        this.setupCamera();
-
-        this.setupLight();
-
-        this.setupRenderer();
-
-        this.createBaseGlobe();
-
         const countriesGeoJson = await this.getCountriesGeoJson();
 
         this.createMapLayer(countriesGeoJson);
 
         this.createSelectedHighlightLayer();
 
-        this.createEarth();
-
-        // Setup orbit control
-        new OrbitControls(this.camera);
+        this.configEarth();
 
         this.mountingElement.addEventListener(
             'mousemove',
             this.createMouseMoveListener(countriesGeoJson),
         );
-    }
-
-    private setupCamera() {
-        this.camera = new THREE.PerspectiveCamera(
-            70,
-            this.width / this.height,
-            1,
-            5000,
-        );
-        this.camera.position.z = 1000;
-    }
-
-    private setupLight() {
-        this.light = new THREE.HemisphereLight('#ffffff', '#666666', 1.5);
-        this.light.position.set(0, 1000, 0);
-    }
-
-    private setupRenderer() {
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(this.width, this.height);
-        this.mountingElement.appendChild(this.renderer.domElement);
-    }
-
-    private createBaseGlobe() {
-        this.baseGlobeGeometry = new THREE.SphereGeometry(this.RADIUS, this.SEGMENT, this.SEGMENT);
-        const material = new THREE.MeshPhongMaterial({ color: '#2B3B59', transparent: true });
-        this.baseGlobe = new THREE.Mesh(this.baseGlobeGeometry, material);
     }
 
     private async getCountriesGeoJson() {
@@ -106,7 +49,7 @@ export class Globe {
             new THREE.SphereGeometry(this.RADIUS + 1, this.SEGMENT, this.SEGMENT),
             material,
         );
-        this.mapLayer.rotation.y = Math.PI * 1.5;
+        this.mapLayer.rotation.y = this.Y_AXIS_OFFSET;
     }
 
     private createSelectedHighlightLayer() {
@@ -114,11 +57,10 @@ export class Globe {
             new THREE.SphereGeometry(this.RADIUS + 2, 40, 40),
             new THREE.MeshPhongMaterial({ opacity: 0, transparent: true }),
         );
-        this.selectedCountryOverlay.rotation.y = Math.PI * 1.5;
+        this.selectedCountryOverlay.rotation.y = this.Y_AXIS_OFFSET;
     }
 
-    private createEarth() {
-        this.earth = new THREE.Object3D();
+    private configEarth() {
         this.earth.scale.set(2.5, 2.5, 2.5);
         this.earth.add(this.baseGlobe);
         this.earth.add(this.mapLayer);
@@ -155,7 +97,7 @@ export class Globe {
     private mapFacesToCountries(countries) {
         const spherical = new THREE.Spherical();
 
-        const store = this.baseGlobeGeometry.faces.reduce(
+        return this.baseGlobeGeometry.faces.reduce(
             (accumulator, face) => {
                 const centerPoint = getCenterPoint(face, this.baseGlobeGeometry.vertices);
 
@@ -166,7 +108,7 @@ export class Globe {
                 const longitude = THREE.Math.radToDeg(spherical.theta);
 
                 // Find if the face is in any country
-                const result = countries.features.find((feature) => {
+                accumulator[`${face.a}${face.b}${face.c}`] = countries.features.find((feature) => {
                     if (feature.geometry.type === 'Polygon') {
                         return pointInPolygon(feature.geometry.coordinates[0], [longitude, latitude]);
                     }
@@ -180,14 +122,10 @@ export class Globe {
                     return false;
                 });
 
-                accumulator[`${face.a}${face.b}${face.c}`] = result;
-
                 return accumulator;
             },
             {},
         );
-
-        return store;
     }
 
     private highlightSelectedCountry(country) {
@@ -196,14 +134,12 @@ export class Globe {
 
             this.rotationAngle = isAnyCountrySelected ? 0 : 0.001;
 
-            const material = isAnyCountrySelected
+            this.selectedCountryOverlay.material = isAnyCountrySelected
                 ? new THREE.MeshPhongMaterial({
                     map: mapTexture(country, this.mountingElement, 'red'),
                     transparent: true,
                 })
                 : new THREE.MeshPhongMaterial({ opacity: 0, transparent: true });
-
-            this.selectedCountryOverlay.material = material;
         }
     }
 
@@ -211,22 +147,5 @@ export class Globe {
         return (this.lastCountry && !country) ||
             (!this.lastCountry && country) ||
             (this.lastCountry && country && this.lastCountry.id !== country.id);
-    }
-
-    start() {
-        if (!this.frameId) {
-            this.frameId = requestAnimationFrame(this.animate);
-        }
-    }
-
-    private animate = () => {
-        this.earth.rotation.y += this.rotationAngle;
-        this.renderer.render(this.scene, this.camera);
-        this.frameId = window.requestAnimationFrame(this.animate);
-    }
-
-    cleanUp() {
-        cancelAnimationFrame(this.frameId);
-        this.mountingElement.removeChild(this.renderer.domElement);
     }
 }

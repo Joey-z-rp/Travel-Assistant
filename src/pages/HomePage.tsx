@@ -2,7 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
-import { Globe } from '../utils/createGlobe';
+import { Globe } from '../components/globe';
 
 const mapStateToProps = () => ({
 });
