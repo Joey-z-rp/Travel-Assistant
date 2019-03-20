@@ -91,7 +91,7 @@ export class Globe {
     }
 
     private async getCountriesGeoJson() {
-        const worldMapTopoJson = await d3.json('public/world.json');
+        const worldMapTopoJson = await d3.json('assets/world.json');
 
         return topojsonFeature(
             worldMapTopoJson,

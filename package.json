@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "cross-fetch": "^2.2.3",
     "d3": "^5.9.2",
-    "express": "^4.16.4",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
     "react-redux": "^5.1.1",
@@ -17,15 +15,11 @@
     "topojson": "^3.0.2"
   },
   "scripts": {
-    "start": "webpack --config ./webpackConfig/development.js --watch",
+    "start": "webpack-dev-server --open --config ./webpackConfig/development.js",
     "build": "webpack --config ./webpackConfig/production.js",
     "lint": "tslint -c tslint.json -p .",
     "test": "npm run lint && jest",
-    "test-jest": "jest",
-    "heroku-postbuild": "npm run build"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "test-jest": "jest"
   },
   "browserslist": [
     ">0.2%",
@@ -36,7 +30,6 @@
   "devDependencies": {
     "@babel/core": "^7.4.0",
     "@types/jest": "^23.3.9",
-    "@types/node": "^10.12.7",
     "@types/react": "^16.7.6",
     "babel-loader": "^8.0.4",
     "babel-polyfill": "^6.26.0",
@@ -45,19 +38,19 @@
     "css-loader": "^1.0.1",
     "file-loader": "^2.0.0",
     "jest": "^23.6.0",
-    "nodemon-webpack-plugin": "^4.0.3",
     "postcss-loader": "^3.0.0",
     "react-test-renderer": "^16.6.3",
-    "redux-mock-store": "^1.5.3",
     "ts-jest": "^23.10.4",
     "ts-loader": "^5.3.0",
     "tslint": "^5.11.0",
     "tslint-config-airbnb": "^5.11.1",
     "tslint-react": "^3.6.0",
     "typescript": "^3.1.6",
+    "uglifyjs-webpack-plugin": "^2.1.2",
     "webpack": "^4.25.1",
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.2.1",
     "webpack-merge": "^4.1.4"
   },
   "jest": {

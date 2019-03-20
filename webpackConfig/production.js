@@ -4,12 +4,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const commonConfig = require('./common');
 
-const serverConfig = merge(commonConfig.server, {
-    mode: 'production',
-    devtool: 'source-map',
-});
-
-const clientConfig = merge(commonConfig.client, {
+module.exports = merge(commonConfig, {
     mode: 'production',
     devtool: 'source-map',
     plugins: [
@@ -21,5 +16,3 @@ const clientConfig = merge(commonConfig.client, {
         }),
     ],
 });
-
-module.exports = [serverConfig, clientConfig];

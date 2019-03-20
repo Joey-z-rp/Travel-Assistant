@@ -2,49 +2,10 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
-const server = {
-    node: {
-        __dirname: false,
-    },
-    target: 'node',
-    entry: {
-        server: './src/server/server.ts',
-    },
+module.exports = {
+    entry: ['babel-polyfill', './src/index.tsx'],
     output: {
         path: path.resolve(__dirname, '../build'),
-        filename: 'server.js',
-        libraryTarget: 'commonjs',
-    },
-    module: {
-        rules: [
-            {
-                test: /\.tsx?$/,
-                use: [
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            transpileOnly: true,
-                        },
-                    },
-                ],
-                include: [
-                    path.resolve(__dirname, '../src/server'),
-                ],
-            },
-        ],
-    },
-    resolve: {
-        extensions: ['.ts', '.tsx', '.js'],
-    },
-    plugins: [new CleanWebpackPlugin('build', { root: path.resolve(__dirname , '..') })],
-};
-
-const client = {
-    entry: {
-        client: ['babel-polyfill', './src/client/index.tsx'],
-    },
-    output: {
-        path: path.resolve(__dirname, '../build/public'),
         filename: 'app.js',
     },
     module: {
@@ -77,7 +38,7 @@ const client = {
                     'postcss-loader',
                 ],
                 include: [
-                    path.resolve(__dirname, '../src/client'),
+                    path.resolve(__dirname, '../src'),
                 ],
             },
             {
@@ -102,8 +63,8 @@ const client = {
                     {
                         loader: 'file-loader',
                         options: {
-                            publicPath: '/public',
-                            outputPath: '../public',
+                            publicPath: '/assets',
+                            outputPath: '../assets',
                         },
                     },
                 ],
@@ -114,10 +75,12 @@ const client = {
         extensions: ['.ts', '.tsx', '.js'],
     },
     plugins: [
+        new CleanWebpackPlugin(
+            'build',
+            { root: path.resolve(__dirname , '..') },
+        ),
         new CopyWebpackPlugin([
             { from: 'public/', to: './' },
         ], { debug: 'warning' }),
     ],
 };
-
-module.exports = { client, server };
