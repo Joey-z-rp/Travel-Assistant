@@ -40,7 +40,7 @@ function getAverage(face, vertices, axis: string) {
     return (vertices[face.a][axis] + vertices[face.b][axis] + vertices[face.c][axis]) / 3;
 }
 
-export function mapTexture(geojson, mountingElement, color = '#CDB380') {
+export function mapTexture(geojson, mountingElement, color = 'rgba(255, 255, 255, 0)') {
     const projection = d3.geoEquirectangular()
         .translate([1024, 512])
         .scale(325);

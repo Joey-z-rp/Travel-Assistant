@@ -14,6 +14,7 @@ export class BaseGlobe {
     protected light;
     protected baseGlobe;
     protected baseGlobeGeometry;
+    private terrainLayer;
     protected earth;
     private frameId;
     protected rotationAngle = 0.001;
@@ -37,8 +38,9 @@ export class BaseGlobe {
 
         this.createBaseGlobe();
 
-        // Create an object to hold all layers
-        this.earth = new THREE.Object3D();
+        this.createTerrainLayer();
+
+        this.createEarth();
     }
 
     private setupCamera() {
@@ -64,8 +66,23 @@ export class BaseGlobe {
 
     private createBaseGlobe() {
         this.baseGlobeGeometry = new THREE.SphereGeometry(this.RADIUS, this.SEGMENT, this.SEGMENT);
-        const material = new THREE.MeshPhongMaterial({ color: '#2B3B59', transparent: true });
+        const material = new THREE.MeshBasicMaterial({ opacity: 0 });
         this.baseGlobe = new THREE.Mesh(this.baseGlobeGeometry, material);
+    }
+
+    private createTerrainLayer() {
+        const geometry = new THREE.SphereGeometry(this.RADIUS + 1, this.SEGMENT, this.SEGMENT);
+        const map = new THREE.TextureLoader().load('assets/2k_earth_daymap.jpg');
+        const material = new THREE.MeshPhongMaterial({ map });
+        this.terrainLayer = new THREE.Mesh(geometry, material);
+        this.terrainLayer.rotation.y = this.Y_AXIS_OFFSET;
+    }
+
+    private createEarth() {
+        this.earth = new THREE.Object3D();
+        this.earth.scale.set(2.5, 2.5, 2.5);
+        this.earth.add(this.baseGlobe);
+        this.earth.add(this.terrainLayer);
     }
 
     start() {

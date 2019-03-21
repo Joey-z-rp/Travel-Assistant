@@ -44,7 +44,7 @@ export class Globe extends BaseGlobe {
 
     private createMapLayer(countries) {
         const worldTexture = mapTexture(countries, this.mountingElement);
-        const material  = new THREE.MeshPhongMaterial({ map: worldTexture, transparent: true });
+        const material  = new THREE.MeshPhongMaterial({ opacity: 0.7, map: worldTexture, transparent: true });
         this.mapLayer = new THREE.Mesh(
             new THREE.SphereGeometry(this.RADIUS + 1, this.SEGMENT, this.SEGMENT),
             material,
@@ -55,14 +55,12 @@ export class Globe extends BaseGlobe {
     private createSelectedHighlightLayer() {
         this.selectedCountryOverlay = new THREE.Mesh(
             new THREE.SphereGeometry(this.RADIUS + 2, 40, 40),
-            new THREE.MeshPhongMaterial({ opacity: 0, transparent: true }),
+            new THREE.MeshPhongMaterial({ opacity: 1, transparent: true }),
         );
         this.selectedCountryOverlay.rotation.y = this.Y_AXIS_OFFSET;
     }
 
     private configEarth() {
-        this.earth.scale.set(2.5, 2.5, 2.5);
-        this.earth.add(this.baseGlobe);
         this.earth.add(this.mapLayer);
         this.earth.add(this.selectedCountryOverlay);
         this.scene.add(this.earth);
@@ -136,7 +134,7 @@ export class Globe extends BaseGlobe {
 
             this.selectedCountryOverlay.material = isAnyCountrySelected
                 ? new THREE.MeshPhongMaterial({
-                    map: mapTexture(country, this.mountingElement, 'red'),
+                    map: mapTexture(country, this.mountingElement, 'rgba(200, 100, 100, 0.6)'),
                     transparent: true,
                 })
                 : new THREE.MeshPhongMaterial({ opacity: 0, transparent: true });
