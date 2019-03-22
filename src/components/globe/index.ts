@@ -3,11 +3,8 @@ import * as THREE from 'three';
 import { feature as topojsonFeature } from 'topojson';
 
 import { BaseGlobe } from './baseGlobe';
-import {
-    getCenterPoint,
-    mapTexture,
-    pointInPolygon,
-} from './globeHelpers';
+import { mapTexture } from './globeHelpers';
+import Worker from './workers/mapFacesToCountries.worker.ts';
 
 export class Globe extends BaseGlobe {
     private mapLayer;
@@ -27,10 +24,8 @@ export class Globe extends BaseGlobe {
 
         this.configEarth();
 
-        this.mountingElement.addEventListener(
-            'mousemove',
-            this.createMouseMoveListener(countriesGeoJson),
-        );
+        // This method is async(not promise)
+        this.addMousemoveEventListener(countriesGeoJson);
     }
 
     private async getCountriesGeoJson() {
@@ -67,9 +62,20 @@ export class Globe extends BaseGlobe {
         this.scene.add(this.light);
     }
 
-    private createMouseMoveListener(countriesGeoJson) {
-        const facesToCountriesMapping = this.mapFacesToCountries(countriesGeoJson);
+    private addMousemoveEventListener(countriesGeoJson) {
+        // Mapping faces to countries is processor intensive
+        const mapFacesToCountriesWorker = new Worker();
+        mapFacesToCountriesWorker.postMessage({ countriesGeoJson, globeGeometry: this.baseGlobeGeometry });
+        mapFacesToCountriesWorker.onmessage = (event) => {
+            this.mountingElement.addEventListener(
+                'mousemove',
+                this.createMouseMoveListener(event.data),
+            );
+            mapFacesToCountriesWorker.terminate();
+        };
+    }
 
+    private createMouseMoveListener(facesToCountriesMapping) {
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
@@ -90,40 +96,6 @@ export class Globe extends BaseGlobe {
 
             this.lastCountry = currentCountry;
         };
-    }
-
-    private mapFacesToCountries(countries) {
-        const spherical = new THREE.Spherical();
-
-        return this.baseGlobeGeometry.faces.reduce(
-            (accumulator, face) => {
-                const centerPoint = getCenterPoint(face, this.baseGlobeGeometry.vertices);
-
-                // Convert to spherical coordinate
-                spherical.setFromVector3(new THREE.Vector3(centerPoint.x, centerPoint.y, centerPoint.z));
-
-                const latitude = THREE.Math.radToDeg(Math.PI / 2 - spherical.phi);
-                const longitude = THREE.Math.radToDeg(spherical.theta);
-
-                // Find if the face is in any country
-                accumulator[`${face.a}${face.b}${face.c}`] = countries.features.find((feature) => {
-                    if (feature.geometry.type === 'Polygon') {
-                        return pointInPolygon(feature.geometry.coordinates[0], [longitude, latitude]);
-                    }
-
-                    if (feature.geometry.type === 'MultiPolygon') {
-                        return !!feature.geometry.coordinates.find((coordinate) => {
-                            return pointInPolygon(coordinate[0], [longitude, latitude]);
-                        });
-                    }
-
-                    return false;
-                });
-
-                return accumulator;
-            },
-            {},
-        );
     }
 
     private highlightSelectedCountry(country) {

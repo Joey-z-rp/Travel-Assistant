@@ -96,7 +96,7 @@ export class BaseGlobe {
         const material = new THREE.MeshPhongMaterial({
             map,
             alphaMap,
-            opacity: 0.5,
+            opacity: 0.3,
             transparent: true,
             side: THREE.DoubleSide,
             depthWrite: false,
