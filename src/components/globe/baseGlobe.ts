@@ -17,6 +17,7 @@ export class BaseGlobe {
     private terrainLayer;
     private atmosphere;
     private atmosphereGlow;
+    private galaxy;
     protected earth;
     private frameId;
     protected rotationAngle = 0.001;
@@ -47,6 +48,8 @@ export class BaseGlobe {
         this.createAtmosphereGlow();
 
         this.createEarth();
+
+        this.createGalaxy();
     }
 
     private setupCamera() {
@@ -85,7 +88,7 @@ export class BaseGlobe {
     }
 
     private createAtmosphere() {
-        const geometry = new THREE.SphereGeometry(this.RADIUS + 5, 40, 40);
+        const geometry = new THREE.SphereGeometry(this.RADIUS + 4, 40, 40);
         const map = new THREE.TextureLoader().load('assets/earthcloudmap.jpg');
         const alphaMap = new THREE.TextureLoader().load('assets/earthcloudmaptrans.jpg');
         const material = new THREE.MeshPhongMaterial({
@@ -101,16 +104,16 @@ export class BaseGlobe {
     }
 
     private createAtmosphereGlow() {
-        const geometry = new THREE.SphereGeometry(this.RADIUS + 5, 40, 40);
+        const geometry = new THREE.SphereGeometry(this.RADIUS + 4, 40, 40);
         const glowMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 c: {
                     type: 'f',
-                    value: 0.5,
+                    value: 0.8,
                 },
                 p: {
                     type: 'f',
-                    value: 4.5,
+                    value: 2,
                 },
                 glowColor: {
                     type: 'c',
@@ -156,6 +159,14 @@ export class BaseGlobe {
         this.earth.add(this.atmosphereGlow);
     }
 
+    private createGalaxy() {
+        const geometry = new THREE.SphereGeometry(2000, 40, 40);
+        const map = new THREE.TextureLoader().load('assets/starfield.png');
+        const material = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide });
+        this.galaxy = new THREE.Mesh(geometry, material);
+        this.scene.add(this.galaxy);
+    }
+
     start() {
         if (!this.frameId) {
             this.frameId = requestAnimationFrame(this.animate);
@@ -165,6 +176,7 @@ export class BaseGlobe {
     private animate = () => {
         this.earth.rotation.y += this.rotationAngle;
         this.atmosphere.rotation.y += 0.0002;
+        this.galaxy.rotation.y += this.rotationAngle;
         this.renderer.render(this.scene, this.camera);
         this.frameId = requestAnimationFrame(this.animate);
     }
