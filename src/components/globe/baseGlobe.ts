@@ -50,6 +50,8 @@ export class BaseGlobe {
         this.createEarth();
 
         this.createGalaxy();
+
+        this.addResizeListener();
     }
 
     private setupCamera() {
@@ -165,6 +167,16 @@ export class BaseGlobe {
         const material = new THREE.MeshBasicMaterial({ map, side: THREE.BackSide });
         this.galaxy = new THREE.Mesh(geometry, material);
         this.scene.add(this.galaxy);
+    }
+
+    private addResizeListener() {
+        const onWindowResize = () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        window.addEventListener('resize', onWindowResize);
     }
 
     start() {
