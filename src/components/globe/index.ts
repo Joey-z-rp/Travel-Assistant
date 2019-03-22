@@ -46,7 +46,7 @@ export class Globe extends BaseGlobe {
         const worldTexture = mapTexture(countries, this.mountingElement);
         const material  = new THREE.MeshPhongMaterial({ opacity: 0.7, map: worldTexture, transparent: true });
         this.mapLayer = new THREE.Mesh(
-            new THREE.SphereGeometry(this.RADIUS + 1, this.SEGMENT, this.SEGMENT),
+            new THREE.SphereGeometry(this.RADIUS + 1, 50, 50),
             material,
         );
         this.mapLayer.rotation.y = this.Y_AXIS_OFFSET;
@@ -55,7 +55,7 @@ export class Globe extends BaseGlobe {
     private createSelectedHighlightLayer() {
         this.selectedCountryOverlay = new THREE.Mesh(
             new THREE.SphereGeometry(this.RADIUS + 2, 40, 40),
-            new THREE.MeshPhongMaterial({ opacity: 1, transparent: true }),
+            new THREE.MeshPhongMaterial({ opacity: 0, transparent: true }),
         );
         this.selectedCountryOverlay.rotation.y = this.Y_AXIS_OFFSET;
     }
