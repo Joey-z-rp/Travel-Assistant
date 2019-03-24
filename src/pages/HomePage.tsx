@@ -4,12 +4,18 @@ import { withRouter } from 'react-router-dom';
 
 import { Globe } from '../components/globe';
 import { hoverOnCountry } from '../actions/globe';
-import { IHomePageProps } from '../interfaces/pages/homePage';
+import {
+    IHomePageDispatchProps,
+    IHomePageProps,
+    IHomePageStateProps,
+} from '../interfaces/pages/homePage';
+import CountryInfo from '../components/homePage/CountryInfo';
+import { IState } from '../interfaces/state';
 
-const mapStateToProps = () => ({
+const mapStateToProps = (state: IState): IHomePageStateProps => ({
 });
 
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = (dispatch): IHomePageDispatchProps => ({
     hoverOn: country => dispatch(hoverOnCountry(country)),
 });
 
@@ -27,12 +33,18 @@ class HomePage extends React.Component<IHomePageProps> {
         this.globe.cleanUp();
     }
 
+    shouldComponentUpdate() {
+        return false;
+    }
+
     render() {
         return(
             <div
                 style={{ width: window.innerWidth, height: window.innerHeight }}
                 ref={(mount) => { this.mount = mount; }}
-            />
+            >
+                <CountryInfo />
+            </div>
         );
     }
 }
