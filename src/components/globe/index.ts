@@ -10,9 +10,12 @@ export class Globe extends BaseGlobe {
     private mapLayer;
     private selectedCountryOverlay;
     private lastCountry;
+    private hoverOn;
 
-    constructor(mountingElement: HTMLElement) {
+    constructor(mountingElement: HTMLElement, hoverOn: Function) {
         super(mountingElement);
+
+        this.hoverOn = hoverOn;
     }
 
     async init() {
@@ -90,7 +93,9 @@ export class Globe extends BaseGlobe {
             const face = intersects[0].face!;
             const currentCountry = facesToCountriesMapping[`${face.a}${face.b}${face.c}`];
 
-            console.log({ currentCountry });
+            if (this.shouldUpdateSelectedCountry(currentCountry)) {
+                this.hoverOn(currentCountry && currentCountry.id);
+            }
 
             this.highlightSelectedCountry(currentCountry);
 
