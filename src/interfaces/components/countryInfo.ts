@@ -1,11 +1,19 @@
 export interface ICountryInfoStateProps {
-    classes?: {
-        card: string;
-    };
+
     hoverOnCountry: string;
 }
 
 export interface ICountryInfoDispatchProps {
 }
 
-export type ICountryInfoProps = ICountryInfoStateProps & ICountryInfoDispatchProps;
+export interface IMaterialUIInject {
+    classes: {
+        card: string;
+        title: string;
+    };
+}
+
+export type ICountryInfoProps =
+    ICountryInfoStateProps
+    & ICountryInfoDispatchProps
+    & IMaterialUIInject;
