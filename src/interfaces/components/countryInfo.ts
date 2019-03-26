@@ -1,3 +1,8 @@
+export interface ICountryInfoInternalState {
+    countryInfo: any;
+    isLoading: boolean;
+}
+
 export interface ICountryInfoStateProps {
 
     hoverOnCountry: string;
@@ -10,6 +15,7 @@ export interface IMaterialUIInject {
     classes: {
         card: string;
         title: string;
+        loaderContainer: string;
     };
 }
 

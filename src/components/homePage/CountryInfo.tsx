@@ -3,16 +3,20 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { withStyles, createStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Typography from '@material-ui/core/Typography';
+import {
+    CardContent,
+    CardHeader,
+    CircularProgress,
+    Typography,
+} from '@material-ui/core';
 import {
     ICountryInfoDispatchProps,
+    ICountryInfoInternalState,
     ICountryInfoProps,
     ICountryInfoStateProps,
 } from '../../interfaces/components/countryInfo';
 import { IState } from '../../interfaces/state';
 import fetch from '../../utils/fetch';
-
 
 const mapStateToProps = (state: IState): ICountryInfoStateProps => ({
     hoverOnCountry: state.globe.hoverOnCountry,
@@ -28,46 +32,70 @@ const styles = createStyles({
         left: 0,
         top: 0,
         margin: 10,
+        paddingBottom: 10,
         backgroundColor: 'rgba(255, 255, 255, 0.5)',
     },
     title: {
         fontSize: 14,
     },
+    loaderContainer: {
+        textAlign: 'center',
+    },
 });
 
-class CountryInfo extends React.Component<ICountryInfoProps> {
-    readonly state = { countryInfo: {} };
+class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInternalState> {
+    readonly state = {
+        countryInfo: {},
+        isLoading: false,
+    };
     private lastSearch: string;
 
     async componentDidUpdate() {
         const searchFor = this.props.hoverOnCountry;
+
         if (searchFor && this.lastSearch !== searchFor) {
-            const countryInfo = (await fetch(`https://restcountries.eu/rest/v2/name/${searchFor}`))[0];
-            if (searchFor === this.props.hoverOnCountry) {
-                this.lastSearch = searchFor;
-                this.setState({ countryInfo });
-            }
+            this.updateCountryInfo(searchFor);
         }
-        
+    }
+
+    async updateCountryInfo(searchFor: string) {
+        if (!this.state.isLoading) this.setState({ isLoading: true });
+
+        const countryInfo = await getCountryInfo(searchFor);
+
+        if (searchFor === this.props.hoverOnCountry) {
+            this.lastSearch = searchFor;
+            this.setState({ countryInfo, isLoading: false });
+        }
     }
 
     render() {
         const { classes, hoverOnCountry } = this.props;
 
-        return hoverOnCountry 
+        const content = this.state.isLoading
+            ? (
+                <div className={classes.loaderContainer}>
+                    <CircularProgress />
+                </div>
+            )
+            : (
+                <CardContent>
+                    <Typography className={classes.title} color="textSecondary">
+                        Currency
+                    </Typography>
+                    <Typography component="p">
+                        {this.state.countryInfo.currencies && this.state.countryInfo.currencies[0].name}
+                    </Typography>
+                </CardContent>
+            );
+
+        return hoverOnCountry
             ? (
                 <Card className={classes.card}>
-                    <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2">
-                            {hoverOnCountry}
-                        </Typography>
-                        <Typography className={classes.title} color="textSecondary">
-                            Currency
-                        </Typography>
-                        <Typography component="p">
-                            {this.state.countryInfo.currencies && this.state.countryInfo.currencies[0].name}
-                        </Typography>
-                    </CardContent>
+                    <CardHeader
+                        title={hoverOnCountry}
+                    />
+                    {content}
                 </Card>
             )
             : null;
@@ -75,5 +103,10 @@ class CountryInfo extends React.Component<ICountryInfoProps> {
 }
 
 export default withRouter(
-    connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CountryInfo))
+    connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CountryInfo)),
 );
+
+async function getCountryInfo(name: string) {
+    const result = await fetch(`https://restcountries.eu/rest/v2/name/${name}`, { cache: true });
+    return result[0];
+}
