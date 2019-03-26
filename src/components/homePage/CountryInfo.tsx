@@ -84,7 +84,7 @@ class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInterna
                         Currency
                     </Typography>
                     <Typography component="p">
-                        {this.state.countryInfo.currencies && this.state.countryInfo.currencies[0].name}
+                        {getCurrency(this.state.countryInfo)}
                     </Typography>
                 </CardContent>
             );
@@ -109,4 +109,8 @@ export default withRouter(
 async function getCountryInfo(name: string) {
     const result = await fetch(`https://restcountries.eu/rest/v2/name/${name}`, { cache: true });
     return result[0];
+}
+
+function getCurrency(countryInfo): string {
+    return countryInfo.currencies && countryInfo.currencies[0].name;
 }
