@@ -10,6 +10,7 @@ import {
     Typography,
 } from '@material-ui/core';
 import {
+    ICountry,
     ICountryInfoDispatchProps,
     ICountryInfoInternalState,
     ICountryInfoProps,
@@ -45,7 +46,7 @@ const styles = createStyles({
 
 class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInternalState> {
     readonly state = {
-        countryInfo: {},
+        countryInfo: {} as ICountry,
         isLoading: false,
     };
     private lastSearch: string;
@@ -81,10 +82,28 @@ class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInterna
             : (
                 <CardContent>
                     <Typography className={classes.title} color="textSecondary">
+                        Language
+                    </Typography>
+                    <Typography component="p">
+                        {this.getCountryInfoFromArray('languages')}
+                    </Typography>
+                    <Typography className={classes.title} color="textSecondary">
                         Currency
                     </Typography>
                     <Typography component="p">
-                        {getCurrency(this.state.countryInfo)}
+                        {this.getCountryInfoFromArray('currencies')}
+                    </Typography>
+                    <Typography className={classes.title} color="textSecondary">
+                        Timezone
+                    </Typography>
+                    <Typography component="p">
+                        {this.getCountryInfoFromArray('timezones')}
+                    </Typography>
+                    <Typography className={classes.title} color="textSecondary">
+                        Calling Code
+                    </Typography>
+                    <Typography component="p">
+                        {this.getCountryInfoFromArray('callingCodes')}
                     </Typography>
                 </CardContent>
             );
@@ -100,6 +119,14 @@ class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInterna
             )
             : null;
     }
+
+    private getCountryInfoFromArray(fieldName: string) {
+        const countryInfo = this.state.countryInfo;
+
+        return countryInfo
+            && countryInfo[fieldName]
+            && countryInfo[fieldName].map(item => item.name || item).join(' / ');
+    }
 }
 
 export default withRouter(
@@ -109,8 +136,4 @@ export default withRouter(
 async function getCountryInfo(name: string) {
     const result = await fetch(`https://restcountries.eu/rest/v2/name/${name}`, { cache: true });
     return result[0];
-}
-
-function getCurrency(countryInfo): string {
-    return countryInfo.currencies && countryInfo.currencies[0].name;
 }
