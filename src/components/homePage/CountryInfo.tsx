@@ -50,6 +50,7 @@ class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInterna
         isLoading: false,
     };
     private lastSearch: string;
+    private fetchController = new AbortController();
 
     async componentDidUpdate() {
         const searchFor = this.props.hoverOnCountry;
@@ -62,12 +63,16 @@ class CountryInfo extends React.Component<ICountryInfoProps, ICountryInfoInterna
     async updateCountryInfo(searchFor: string) {
         if (!this.state.isLoading) this.setState({ isLoading: true });
 
-        const countryInfo = await getCountryInfo(searchFor);
+        const countryInfo = await getCountryInfo(searchFor, this.fetchController.signal);
 
         if (searchFor === this.props.hoverOnCountry) {
             this.lastSearch = searchFor;
             this.setState({ countryInfo, isLoading: false });
         }
+    }
+
+    componentWillUnmount(): void {
+        this.fetchController.abort();
     }
 
     render() {
@@ -133,7 +138,13 @@ export default withRouter(
     connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CountryInfo)),
 );
 
-async function getCountryInfo(name: string) {
-    const result = await fetch(`https://restcountries.eu/rest/v2/name/${name}`, { cache: true });
+async function getCountryInfo(name: string, signal) {
+    const result = await fetch(
+        `https://restcountries.eu/rest/v2/name/${name}`,
+        {
+            signal,
+            cache: true,
+        },
+    );
     return result[0];
 }

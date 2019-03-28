@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import * as THREE from 'three';
 import { feature as topojsonFeature } from 'topojson';
 
+import { ICallbacks } from '../../interfaces/components/globe';
 import { BaseGlobe } from './baseGlobe';
 import { mapTexture } from './globeHelpers';
 import Worker from './workers/mapFacesToCountries.worker.ts';
@@ -10,12 +11,15 @@ export class Globe extends BaseGlobe {
     private mapLayer;
     private selectedCountryOverlay;
     private lastCountry;
-    private hoverOn;
+    private currentCountry;
+    private hoverOn: Function;
+    private navigateToRecordJourney: Function;
 
-    constructor(mountingElement: HTMLElement, hoverOn: Function) {
+    constructor(mountingElement: HTMLElement, callbacks: ICallbacks) {
         super(mountingElement);
 
-        this.hoverOn = hoverOn;
+        this.hoverOn = callbacks.hoverOn;
+        this.navigateToRecordJourney = callbacks.navigateToRecordJourney;
     }
 
     async init() {
@@ -28,7 +32,7 @@ export class Globe extends BaseGlobe {
         this.configEarth();
 
         // This method is async(not promise)
-        this.addMousemoveEventListener(countriesGeoJson);
+        this.addMouseEventListener(countriesGeoJson);
     }
 
     private async getCountriesGeoJson() {
@@ -65,7 +69,7 @@ export class Globe extends BaseGlobe {
         this.scene.add(this.light);
     }
 
-    private addMousemoveEventListener(countriesGeoJson) {
+    private addMouseEventListener(countriesGeoJson) {
         // Mapping faces to countries is processor intensive
         const mapFacesToCountriesWorker = new Worker();
         mapFacesToCountriesWorker.postMessage({ countriesGeoJson, globeGeometry: this.baseGlobeGeometry });
@@ -74,6 +78,16 @@ export class Globe extends BaseGlobe {
                 'mousemove',
                 this.createMouseMoveListener(event.data),
             );
+
+            this.mountingElement.addEventListener(
+                'click',
+                () => {
+                    if (this.currentCountry && this.currentCountry.id) {
+                        this.navigateToRecordJourney();
+                    }
+                },
+            );
+
             mapFacesToCountriesWorker.terminate();
         };
     }
@@ -91,15 +105,15 @@ export class Globe extends BaseGlobe {
             if (intersects.length === 0) return;
 
             const face = intersects[0].face!;
-            const currentCountry = facesToCountriesMapping[`${face.a}${face.b}${face.c}`];
+            this.currentCountry = facesToCountriesMapping[`${face.a}${face.b}${face.c}`];
 
-            if (this.shouldUpdateSelectedCountry(currentCountry)) {
-                this.hoverOn(currentCountry && currentCountry.id);
+            if (this.shouldUpdateSelectedCountry(this.currentCountry)) {
+                this.hoverOn(this.currentCountry && this.currentCountry.id);
             }
 
-            this.highlightSelectedCountry(currentCountry);
+            this.highlightSelectedCountry(this.currentCountry);
 
-            this.lastCountry = currentCountry;
+            this.lastCountry = this.currentCountry;
         };
     }
 

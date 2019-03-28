@@ -11,6 +11,7 @@ import {
 } from '../interfaces/pages/homePage';
 import CountryInfo from '../components/homePage/CountryInfo';
 import { IState } from '../interfaces/state';
+import { ICallbacks } from '../interfaces/components/globe';
 
 const mapStateToProps = (state: IState): IHomePageStateProps => ({
 });
@@ -24,8 +25,14 @@ class HomePage extends React.Component<IHomePageProps> {
     private globe;
 
     async componentDidMount() {
-        this.globe = new Globe(this.mount, this.props.hoverOn);
+        const callbacks: ICallbacks = {
+            hoverOn: this.props.hoverOn,
+            navigateToRecordJourney: () => this.props.history.push('record-journey'),
+        };
+
+        this.globe = new Globe(this.mount, callbacks);
         await this.globe.init();
+
         this.globe.start();
     }
 

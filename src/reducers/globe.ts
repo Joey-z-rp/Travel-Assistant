@@ -1,6 +1,6 @@
-import { IGlobeState } from "../interfaces/state";
-import { HOVER_ON_COUNTRY } from "../actions/globe";
-import { IAction } from "../interfaces/action";
+import { IGlobeState } from '../interfaces/state';
+import { HOVER_ON_COUNTRY } from '../actions/globe';
+import { IAction } from '../interfaces/action';
 
 const initialState = {
     hoverOnCountry: '',
