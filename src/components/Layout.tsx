@@ -18,6 +18,7 @@ import { createStyles, withStyles } from '@material-ui/core/styles';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MenuIcon from '@material-ui/icons/Menu';
 import { IState } from '../interfaces/state';
+import { ILayoutInternalState, ILayoutProps } from '../interfaces/components/layout';
 
 const drawerWidth = 200;
 
@@ -53,7 +54,7 @@ const mapStateToProps = (state: IState): any => ({
 const mapDispatchToProps = (dispatch): any => ({
 });
 
-class Layout extends React.Component<any> {
+class Layout extends React.Component<ILayoutProps, ILayoutInternalState> {
     state = {
         open: false,
     };

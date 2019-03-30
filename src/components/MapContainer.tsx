@@ -6,7 +6,7 @@ import {
 } from 'google-maps-react';
 import * as React from 'react';
 
-export class MapContainer extends React.Component {
+export class MapContainer extends React.Component<any> {
     render() {
         return (
             <Map google={this.props.google} zoom={14}>
