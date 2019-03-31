@@ -138,7 +138,7 @@ export default withRouter(
     connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(CountryInfo)),
 );
 
-async function getCountryInfo(name: string, signal) {
+export async function getCountryInfo(name: string, signal?): Promise<ICountry> {
     const result = await fetch(
         `https://restcountries.eu/rest/v2/name/${name}`,
         {

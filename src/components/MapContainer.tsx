@@ -9,7 +9,7 @@ import * as React from 'react';
 export class MapContainer extends React.Component<any> {
     render() {
         return (
-            <Map google={this.props.google} zoom={14}>
+            <Map google={this.props.google} initialCenter={this.props.initialCenter} zoom={14}>
 
                 <Marker
                     onClick={() => {}}
